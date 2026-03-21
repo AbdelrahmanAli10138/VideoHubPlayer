@@ -16,7 +16,7 @@ class _OnBoarding1State extends State<OnBoarding1> {
     return Container(
       decoration: BoxDecoration(
         gradient: RadialGradient(
-          colors: [AppColors.pureOrangeColor, AppColors.blackColor],
+          colors: [AppColors.primary, AppColors.secondary],
         ),
       ),
       child: Center(child: Image.asset("assets/images/yellowLogo.png")),

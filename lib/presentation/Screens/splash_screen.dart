@@ -14,7 +14,7 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.blackColor,
+      backgroundColor: AppColors.secondary,
       body: Stack(
         alignment: Alignment.bottomCenter, // to make indicator in the bottom
         children: [
@@ -36,7 +36,7 @@ class SplashScreen extends StatelessWidget {
                 dotWidth: 8,
                 spacing: 10,
                 expansionFactor: 4,
-                activeDotColor: AppColors.pureOrangeColor,
+                activeDotColor: AppColors.primary,
                 dotColor: AppColors.subTitleColor,
               ),
             ),

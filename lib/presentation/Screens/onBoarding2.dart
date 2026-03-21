@@ -13,36 +13,54 @@ class Onboarding2 extends StatelessWidget {
       body: Container(
         height: double.infinity,
         width: double.infinity,
-        decoration: BoxDecoration(color: AppColors.blackColor),
+        decoration: BoxDecoration(color: AppColors.secondary),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
 
           children: [
             CustomOnBoardingWidget(imagePath: "assets/images/micImage.jpg"),
             Gap(25),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Text(
-                ConstantStrings.onboardingOneTitle,
-                style: TextStyle(
-                  color: AppColors.whiteColor,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
+            ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [AppColors.primary, AppColors.tertiary],
+              ).createShader(bounds),
+              child: Align(
+                alignment: Alignment.center,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  child: Text(
+                    ConstantStrings.onboardingOneTitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ),
             Gap(20),
-            Align(
-              alignment: AlignmentGeometry.center,
-
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50),
-                child: Text(
-                  ConstantStrings.onboardingOneSubTitle,
-                  style: TextStyle(
-                    color: AppColors.subTitleColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+            ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [AppColors.whiteColor, AppColors.skyBlue],
+              ).createShader(bounds),
+              child: Align(
+                alignment: Alignment.center,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  child: Text(
+                    ConstantStrings.onboardingOneSubTitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white, // very important
+                    ),
                   ),
                 ),
               ),

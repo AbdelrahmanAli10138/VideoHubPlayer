@@ -14,77 +14,97 @@ class Onboarding3 extends StatelessWidget {
       body: Container(
         height: double.infinity,
         width: double.infinity,
-        decoration: BoxDecoration(color: AppColors.blackColor),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        decoration: BoxDecoration(color: AppColors.secondary),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
 
-          children: [
-            CustomOnBoardingWidget(imagePath: "assets/images/waveImage.png"),
-            Gap(25),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Text(
-                ConstantStrings.onboardingTwoTitle,
-                style: TextStyle(
-                  color: AppColors.whiteColor,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Gap(20),
-            Align(
-              alignment: AlignmentGeometry.center,
-
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50),
-                child: Text(
-                  ConstantStrings.onboardingTwoSubTitle,
-                  style: TextStyle(
-                    color: AppColors.subTitleColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+            children: [
+              CustomOnBoardingWidget(imagePath: "assets/images/waveImage.png"),
+              Gap(25),
+              ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [AppColors.primary, AppColors.tertiary],
+                ).createShader(bounds),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 50),
+                    child: Text(
+                      ConstantStrings.onboardingTwoTitle,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            Gap(220),
-            SizedBox(
-              height: 50,
-              width: 300,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.pureOrangeColor,
-                ),
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomeScreen()),
-                  );
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Get Started",
+              Gap(20),
+              ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [AppColors.whiteColor, AppColors.skyBlue],
+                ).createShader(bounds),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 50),
+                    child: Text(
+                      ConstantStrings.onboardingTwoSubTitle,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: AppColors.whiteColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white, // مهم جدًا
                       ),
                     ),
-                    Gap(10),
-                    Icon(
-                      Icons.arrow_forward,
-                      size: 24,
-                      color: AppColors.whiteColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+              Gap(120),
+              SizedBox(
+                height: 50,
+                width: 300,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                    );
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Get Started",
+                        style: TextStyle(
+                          color: AppColors.whiteColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                        ),
+                      ),
+                      Gap(10),
+                      Icon(
+                        Icons.arrow_forward,
+                        size: 24,
+                        color: AppColors.whiteColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
