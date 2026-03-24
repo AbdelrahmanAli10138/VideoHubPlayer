@@ -24,7 +24,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Future<void> checkPermissionAndLoad() async {
-    // طلب الإذن للمستخدم
     var status = await Permission.storage.request();
 
     if (!status.isGranted) {

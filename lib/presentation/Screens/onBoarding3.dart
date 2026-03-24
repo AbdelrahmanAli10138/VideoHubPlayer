@@ -1,84 +1,95 @@
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart' show Gap;
+import 'package:gap/gap.dart';
 import 'package:video_hub/core/Constant/constant_strings.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
 import 'package:video_hub/presentation/Screens/home_screen.dart';
 import 'package:video_hub/presentation/Widgets/custom_onboarding_stack.dart';
 
 class Onboarding3 extends StatelessWidget {
-  Onboarding3({super.key});
+  const Onboarding3({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        height: double.infinity,
-        width: double.infinity,
-        decoration: BoxDecoration(color: AppColors.secondary),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+    final size = MediaQuery.of(context).size;
 
-            children: [
-              CustomOnBoardingWidget(imagePath: "assets/images/waveImage.png"),
-              Gap(25),
-              ShaderMask(
-                shaderCallback: (bounds) => LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [AppColors.primary, AppColors.tertiary],
-                ).createShader(bounds),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 50),
-                    child: Text(
-                      ConstantStrings.onboardingTwoTitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+    return Scaffold(
+      backgroundColor: AppColors.secondary,
+      body: SafeArea(
+        child: Column(
+          children: [
+            /// 🔼 المحتوى اللي فوق
+            Expanded(
+              child: Column(
+                children: [
+                  CustomOnBoardingWidget(
+                    imagePath: "assets/images/waveImage.png",
+                  ),
+                  const Gap(25),
+
+                  /// Title
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
+                    child: ShaderMask(
+                      shaderCallback: (bounds) => LinearGradient(
+                        colors: [AppColors.primary, AppColors.tertiary],
+                      ).createShader(bounds),
+                      child: Text(
+                        ConstantStrings.onboardingTwoTitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: size.width * 0.07,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              Gap(20),
-              ShaderMask(
-                shaderCallback: (bounds) => LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [AppColors.whiteColor, AppColors.skyBlue],
-                ).createShader(bounds),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 50),
-                    child: Text(
-                      ConstantStrings.onboardingTwoSubTitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white, // مهم جدًا
+
+                  const Gap(20),
+
+                  /// Subtitle
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
+                    child: ShaderMask(
+                      shaderCallback: (bounds) => LinearGradient(
+                        colors: [AppColors.whiteColor, AppColors.skyBlue],
+                      ).createShader(bounds),
+                      child: Text(
+                        ConstantStrings.onboardingTwoSubTitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: size.width * 0.04,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-              Gap(120),
-              SizedBox(
-                height: 50,
-                width: 300,
+            ),
+
+            /// 🔽 الزرار تحت خالص
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: size.height * 0.03,
+                left: size.width * 0.1,
+                right: size.width * 0.1,
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                height: size.height * 0.07,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(size.width * 0.04),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                      MaterialPageRoute(builder: (_) => HomeScreen()),
                     );
                   },
                   child: Row(
@@ -89,22 +100,21 @@ class Onboarding3 extends StatelessWidget {
                         style: TextStyle(
                           color: AppColors.whiteColor,
                           fontWeight: FontWeight.bold,
-                          fontSize: 22,
+                          fontSize: size.width * 0.05,
                         ),
                       ),
-                      Gap(10),
+                      const Gap(10),
                       Icon(
                         Icons.arrow_forward,
-                        size: 24,
+                        size: size.width * 0.05,
                         color: AppColors.whiteColor,
-                        fontWeight: FontWeight.bold,
                       ),
                     ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

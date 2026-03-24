@@ -13,6 +13,7 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: AppColors.secondary,
       body: Stack(
@@ -26,7 +27,7 @@ class SplashScreen extends StatelessWidget {
           ),
 
           Padding(
-            padding: const EdgeInsets.only(bottom: 120),
+            padding: EdgeInsets.only(bottom: size.height * 0.18),
             child: SmoothPageIndicator(
               controller:
                   controller, // take the same controller of page view to change simulatiously

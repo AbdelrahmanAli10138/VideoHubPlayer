@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
 import 'package:video_hub/model/services/image_picker_services.dart';
 import 'package:video_hub/model/services/shared_prefs_services.dart';
+import 'package:video_hub/model/services/show_image_options_services.dart';
 import 'package:video_hub/presentation/Screens/full_image_screen.dart';
 import 'package:video_hub/presentation/Screens/history_screen.dart';
 import 'package:video_hub/presentation/Screens/library_screen.dart';
@@ -74,77 +75,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Show bottom sheet for image options
-  void showImageOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: Icon(Icons.remove_red_eye),
-                title: Text(
-                  "View Image",
-                  style: TextStyle(
-                    color: AppColors.tertiary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  if (pickedImage != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            FullImageScreen(image: pickedImage!),
-                      ),
-                    );
-                  }
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo),
-                title: Text(
-                  "Gallery",
-                  style: TextStyle(color: AppColors.tertiary),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  fetchImageFromGallery();
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.camera_alt_outlined),
-                title: Text(
-                  "Camera",
-                  style: TextStyle(color: AppColors.tertiary),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  fetchImageFromCamera();
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.delete, color: Colors.red),
-                title: Text(
-                  "Delete Image",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  deleteImage();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +83,17 @@ class _HomeScreenState extends State<HomeScreen> {
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: GestureDetector(
-            onTap: showImageOptions,
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) => ImageOptionsSheet(
+                  pickedImage: pickedImage,
+                  onDelete: deleteImage,
+                  onPickFromGallery: fetchImageFromGallery,
+                  onPickFromCamera: fetchImageFromCamera,
+                ),
+              );
+            },
             child: CircleAvatar(
               radius: 50,
               backgroundColor: AppColors.secondary,
@@ -169,7 +109,6 @@ class _HomeScreenState extends State<HomeScreen> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      endDrawer: Drawer(backgroundColor: AppColors.secondary),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 30),
         child: Column(
