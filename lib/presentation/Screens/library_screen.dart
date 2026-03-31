@@ -1,9 +1,8 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
-import 'video_player_screen.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -15,97 +14,147 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   List<AssetEntity> videos = [];
   bool isLoading = true;
-  bool hasPermission = true;
+  String statusMessage = "Checking Permission...";
 
   @override
   void initState() {
     super.initState();
+    print("--- DEBUG: initState started ---");
     checkPermissionAndLoad();
   }
 
   Future<void> checkPermissionAndLoad() async {
-    var status = await Permission.storage.request();
+    try {
+      print("--- DEBUG: Requesting Permission ---");
 
-    if (!status.isGranted) {
+      // take a permission to access the videos in the app
+      final PermissionState ps = await PhotoManager.requestPermissionExtend();
+
+      print("--- DEBUG: Permission Status: $ps ---");
+
+      if (ps.isAuth || ps.hasAccess) {
+        print("--- DEBUG: Access Granted! Loading Videos... ---");
+        setState(() => statusMessage = "Loading Videos...");
+        await loadVideos();
+      } else {
+        print("--- DEBUG: Access Denied! ---");
+        setState(() {
+          isLoading = false;
+          statusMessage = "Permission Denied! Status: $ps";
+        });
+      }
+    } catch (e) {
+      print("--- DEBUG: Error in Permission: $e ---");
       setState(() {
-        hasPermission = false;
         isLoading = false;
+        statusMessage = "Permission Error: $e";
       });
-      return;
     }
-
-    loadVideos();
   }
 
   Future<void> loadVideos() async {
-    List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
-      type: RequestType.video,
-    );
+    try {
+      print("--- DEBUG: Fetching Album List ---");
 
-    List<AssetEntity> allVideos = [];
+      // 1. جلب قائمة الألبومات التي تحتوي على فيديوهات
+      List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
+        type: RequestType.video,
+      );
 
-    for (var album in albums) {
-      final media = await album.getAssetListPaged(page: 0, size: 1000);
-      allVideos.addAll(media);
+      if (albums.isNotEmpty) {
+        print(
+          "--- DEBUG: Found ${albums.length} albums. Fetching from first one ---",
+        );
+
+        // fetch first 50 videos
+        final List<AssetEntity> result = await albums[0].getAssetListPaged(
+          page: 0,
+          size: 50,
+        );
+
+        print("--- DEBUG: Found ${result.length} videos ---");
+
+        if (mounted) {
+          setState(() {
+            videos = result;
+            isLoading = false;
+            statusMessage = result.isEmpty ? "No videos found" : "";
+          });
+        }
+      } else {
+        print("--- DEBUG: No albums found ---");
+        setState(() {
+          isLoading = false;
+          statusMessage = "No video albums found";
+        });
+      }
+    } catch (e) {
+      print("--- DEBUG: Error in loadVideos: $e ---");
+      setState(() {
+        isLoading = false;
+        statusMessage = "Failed to load videos: $e";
+      });
     }
-
-    print("Videos count: ${allVideos.length}");
-
-    setState(() {
-      videos = allVideos;
-      isLoading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: AppColors.tertiary),
-        backgroundColor: AppColors.secondary,
-        title: const Text("Library"),
-        titleTextStyle: TextStyle(
-          color: AppColors.tertiary,
-          fontSize: 26,
-          fontWeight: FontWeight.bold,
-        ),
-        centerTitle: true,
-      ),
+      backgroundColor: AppColors.secondary,
       body: Column(
         children: [
-          // Search
+          Gap(size.height * 0.01),
           Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: TextField(
+            padding: const EdgeInsets.all(10.0),
+            child: TextFormField(
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search, color: AppColors.tertiary),
-                hintText: "Search videos...",
-                hintStyle: TextStyle(color: AppColors.tertiary),
-                filled: true,
+                hintText: "Search",
+                hintStyle: TextStyle(
+                  color: AppColors.whiteColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+                suffixIcon: Icon(Icons.search),
                 fillColor: AppColors.secondary,
-                border: OutlineInputBorder(
+                filled: true,
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide.none,
                 ),
               ),
+              onChanged: (value) {},
             ),
           ),
-          // Content
+          Gap(size.height * .01),
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : !hasPermission
                 ? Center(
-                    child: Text(
-                      "Storage permission denied 😢",
-                      style: TextStyle(color: AppColors.tertiary, fontSize: 18),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 20),
+                        Text(
+                          statusMessage,
+                          style: TextStyle(color: AppColors.tertiary),
+                        ),
+                      ],
                     ),
                   )
                 : videos.isEmpty
                 ? Center(
                     child: Text(
-                      "No videos found",
-                      style: TextStyle(color: AppColors.tertiary, fontSize: 18),
+                      statusMessage,
+                      style: TextStyle(color: AppColors.tertiary),
                     ),
                   )
                 : GridView.builder(
@@ -119,66 +168,40 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         ),
                     itemBuilder: (context, index) {
                       final video = videos[index];
-
-                      return GestureDetector(
-                        onTap: () async {
-                          final file = await video.file;
-                          if (file != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => VideoPlayerScreen(file.path),
-                              ),
-                            );
-                          }
-                        },
-                        child: FutureBuilder<Uint8List?>(
-                          future: video.thumbnailDataWithSize(
-                            const ThumbnailSize(200, 200),
-                          ),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                    ConnectionState.done &&
-                                snapshot.data != null) {
-                              return ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Stack(
-                                  children: [
-                                    Positioned.fill(
-                                      child: Image.memory(
-                                        snapshot.data!,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    const Center(
-                                      child: Icon(
-                                        Icons.play_circle_fill,
-                                        color: Colors.white,
-                                        size: 40,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.videocam,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      );
+                      return _buildThumbnail(video);
                     },
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThumbnail(AssetEntity video) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image(
+              image: AssetEntityImageProvider(
+                video,
+                isOriginal: false,
+                thumbnailSize: const ThumbnailSize.square(250),
+              ),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.grey[900],
+                child: const Icon(Icons.error, color: Colors.white),
+              ),
+            ),
+          ),
+          const Center(
+            child: Icon(
+              Icons.play_circle_fill,
+              color: Colors.white70,
+              size: 35,
+            ),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import المهم جداً للـ Storage
 import 'package:video_hub/core/Constant/constant_strings.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
 import 'package:video_hub/presentation/Screens/home_screen.dart';
@@ -17,7 +18,7 @@ class Onboarding3 extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            /// 🔼 المحتوى اللي فوق
+            /// 🔼 الجزء العلوي (الصور والنصوص)
             Expanded(
               child: Column(
                 children: [
@@ -26,7 +27,7 @@ class Onboarding3 extends StatelessWidget {
                   ),
                   const Gap(25),
 
-                  /// Title
+                  /// Title مع الـ Gradient
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
                     child: ShaderMask(
@@ -47,7 +48,7 @@ class Onboarding3 extends StatelessWidget {
 
                   const Gap(20),
 
-                  /// Subtitle
+                  /// Subtitle مع الـ Gradient
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
                     child: ShaderMask(
@@ -69,7 +70,7 @@ class Onboarding3 extends StatelessWidget {
               ),
             ),
 
-            /// 🔽 الزرار تحت خالص
+            /// 🔽 زرار "Get Started" المعدل
             Padding(
               padding: EdgeInsets.only(
                 bottom: size.height * 0.03,
@@ -86,11 +87,22 @@ class Onboarding3 extends StatelessWidget {
                       borderRadius: BorderRadius.circular(size.width * 0.04),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => HomeScreen()),
-                    );
+                  // التعديل هنا: إضافة async لحفظ البيانات
+                  onPressed: () async {
+                    // 1. حفظ قيمة "FirstTime" كـ false في ذاكرة الجهاز
+                    final SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
+                    await prefs.setBool("FirstTime", false);
+
+                    // 2. الانتقال لصفحة الـ HomeScreen ومسح كل صفحات الـ Onboarding السابقة
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const HomeScreen()),
+                        (route) =>
+                            false, // يمنع الرجوع للـ Onboarding بالـ Back button
+                      );
+                    }
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
