@@ -1,5 +1,4 @@
 import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
 import 'package:photo_manager/photo_manager.dart'
     show AssetEntity, AssetPathEntity, PhotoManager, RequestType;
 import 'package:video_hub/logic/videos_logic/video_state.dart'

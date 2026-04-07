@@ -4,10 +4,8 @@ import 'package:gap/gap.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
 import 'package:video_hub/model/services/image_picker_services.dart';
 import 'package:video_hub/model/services/shared_prefs_services.dart';
-import 'package:video_hub/model/services/show_image_options_services.dart';
-import 'package:video_hub/presentation/Screens/history_screen.dart';
-import 'package:video_hub/presentation/Screens/library_screen.dart';
 import 'package:video_hub/presentation/Screens/settings_screen.dart';
+import 'package:video_hub/presentation/Screens/library_screen.dart';
 import 'package:video_hub/presentation/Widgets/custom_home_stack.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,54 +18,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
   File? pickedImage;
-  final ImagePickerService _imagePickerService = ImagePickerService();
 
-  final List<String> appBarTitles = [
-    "Welcome Back",
-    " Library",
-    " History",
-    "Settings",
-  ];
+  final List<String> appBarTitles = ["Welcome Back", " Library", "Settings"];
 
   late List<Widget> screens;
 
   @override
   void initState() {
     super.initState();
-    loadImage();
-    screens = [
-      const HomeContent(),
-      const LibraryScreen(),
-      const HistoryScreen(),
-      SettingsScreen(),
-    ];
+    displayProfileImage();
+    screens = [const HomeContent(), const LibraryScreen(), SettingsScreen()];
   }
 
-  // load image function
-  Future<void> loadImage() async {
-    final path = await SharedPrefsService.getProfileImage();
-    if (path != null) setState(() => pickedImage = File(path));
-  }
-
-  Future<void> fetchImageFromGallery() async {
-    final file = await _imagePickerService.pickFromGallery();
-    if (file != null) {
-      setState(() => pickedImage = file);
-      await SharedPrefsService.saveProfileImage(file.path);
+  Future<void> displayProfileImage() async {
+    final String? path = await SharedPrefsService.getProfileImage();
+    if (path != null) {
+      setState(() {
+        pickedImage = File(path);
+      });
     }
-  }
-
-  Future<void> fetchImageFromCamera() async {
-    final file = await _imagePickerService.pickFromCamera();
-    if (file != null) {
-      setState(() => pickedImage = file);
-      await SharedPrefsService.saveProfileImage(file.path);
-    }
-  }
-
-  Future<void> deleteImage() async {
-    await SharedPrefsService.deleteProfileImage();
-    setState(() => pickedImage = null);
   }
 
   @override
@@ -89,32 +58,15 @@ class _HomeScreenState extends State<HomeScreen> {
         leading: currentIndex == 0
             ? Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      builder: (context) => ImageOptionsSheet(
-                        pickedImage: pickedImage,
-                        onDelete: deleteImage,
-                        onPickFromGallery: fetchImageFromGallery,
-                        onPickFromCamera: fetchImageFromCamera,
-                      ),
-                    );
-                  },
-                  child: CircleAvatar(
-                    radius: 100,
-                    backgroundColor: AppColors.primary,
-                    backgroundImage: pickedImage != null
-                        ? FileImage(pickedImage!)
-                        : null,
-                    child: pickedImage == null
-                        ? const Icon(
-                            Icons.person,
-                            size: 20,
-                            color: Colors.white,
-                          )
-                        : null,
-                  ),
+                child: CircleAvatar(
+                  radius: 100,
+                  backgroundColor: AppColors.primary,
+                  backgroundImage: pickedImage != null
+                      ? FileImage(pickedImage!)
+                      : null,
+                  child: pickedImage == null
+                      ? const Icon(Icons.person, size: 20, color: Colors.white)
+                      : null,
                 ),
               )
             : null,
@@ -126,8 +78,12 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: currentIndex,
         onTap: (index) {
           setState(() {
-            currentIndex = index; // تحديث الـ Index
+            currentIndex = index;
           });
+          // to show the image in the screen
+          if (index == 0) {
+            displayProfileImage();
+          }
         },
         type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.secondary,
@@ -139,7 +95,6 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.video_library),
             label: "Library",
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: "Settings",
@@ -150,14 +105,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// 5. ويدجت محتوى صفحة الهوم (الجزء اللي فيه الزراير)
 class HomeContent extends StatelessWidget {
   const HomeContent({super.key});
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      // عشان لو الشاشة صغيرة ميعملش Overflow
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 30),
       child: Column(
         children: [

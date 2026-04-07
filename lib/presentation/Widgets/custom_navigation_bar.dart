@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
 import 'package:video_hub/presentation/Screens/home_screen.dart';
 import 'package:video_hub/presentation/Screens/library_screen.dart';
-import 'package:video_hub/presentation/Screens/history_screen.dart';
+import 'package:video_hub/presentation/Screens/settings_screen.dart';
 import 'package:video_hub/presentation/Screens/settings_screen.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
@@ -29,14 +29,6 @@ class CustomBottomNavigationBar extends StatelessWidget {
         break;
       case 2:
         if (currentIndex != 2) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => HistoryScreen()),
-          );
-        }
-        break;
-      case 3:
-        if (currentIndex != 3) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => SettingsScreen()),
