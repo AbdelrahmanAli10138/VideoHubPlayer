@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:url_launcher/url_launcher.dart' show canLaunchUrl, launchUrl;
+import 'package:url_launcher/url_launcher_string.dart' show LaunchMode;
 import 'package:video_hub/core/Themes/app_theme.dart';
-import 'package:video_hub/model/services/image_picker_services.dart';
 import 'package:video_hub/model/services/shared_prefs_services.dart';
 import 'package:video_hub/presentation/Screens/edit_profile_screen.dart';
 import 'package:video_hub/presentation/Widgets/custom_list_tile_widget.dart';
@@ -16,12 +17,14 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  String userName = "User";
   // create a variable from file type to carry the path of the file
   File? profileImage;
   void initState() {
     super.initState();
     // run the function when the page is running
     loadProfileImage();
+    loadUserName();
   }
 
   // Future function to load the image from shred preferences
@@ -31,6 +34,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (path != null) {
       setState(() {});
       profileImage = File(path);
+    }
+  }
+
+  Future<void> loadUserName() async {
+    final String? path = await SharedPrefsService.getUserName();
+    if (path != null) {
+      setState(() {
+        userName = path;
+      });
+    }
+  }
+
+  // function to send an email for support
+  Future<void> sendEmail() async {
+    final Uri emailUri = Uri(
+      scheme: "mailto",
+      path: "abdoaliahmed2005@gmail.com",
+      queryParameters: {"subject": "Support Request - Video Hub"},
+    );
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    } else {
+      print("Sorry You could not launch the email");
+    }
+  }
+
+  // function to send an whats app message for support
+  Future<void> sendWhatsApp() async {
+    final String phoneNumber = "201030048550";
+    final String message =
+        "Hello i want to contact to the technical support for problem";
+    final Uri whatsUri = Uri.parse(
+      "https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}",
+    );
+    if (!await launchUrl(whatsUri, mode: LaunchMode.externalApplication)) {
+      throw "could not launch Whats App";
     }
   }
 
@@ -74,7 +113,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Gap(size.width * 0.05),
 
                         Text(
-                          "Name",
+                          userName,
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
@@ -118,8 +157,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             MaterialPageRoute(
                               builder: (context) => EditProfileScreen(),
                             ),
+                            // this function to tell to app after pushing to other page transfer the functions data in then function
                           ).then((value) {
+                            // must call these function to pass the data from page to another page
                             loadProfileImage();
+                            loadUserName();
                           }),
                       child: CustomListTile(
                         leading: Icon(
@@ -164,16 +206,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     //Email List Tile Widget.
-                    CustomListTile(
-                      leading: Icon(
-                        Icons.email_outlined,
-                        size: 40,
-                        color: AppColors.primary,
-                      ),
-                      title: "Email",
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        color: AppColors.primary,
+                    InkWell(
+                      onTap: sendEmail,
+                      child: CustomListTile(
+                        leading: Icon(
+                          Icons.email_outlined,
+                          size: 40,
+                          color: AppColors.primary,
+                        ),
+                        title: "Email",
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                     // the divider widget to break from each widget with line
@@ -184,16 +229,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       endIndent: 10,
                     ),
                     // WhatsApp List Tile
-                    CustomListTile(
-                      leading: Icon(
-                        Icons.message_outlined,
-                        size: 40,
-                        color: AppColors.primary,
-                      ),
-                      title: " WhatsApp",
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        color: AppColors.primary,
+                    InkWell(
+                      onTap: sendWhatsApp,
+                      child: CustomListTile(
+                        leading: Icon(
+                          Icons.message_outlined,
+                          size: 40,
+                          color: AppColors.primary,
+                        ),
+                        title: " WhatsApp",
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ],

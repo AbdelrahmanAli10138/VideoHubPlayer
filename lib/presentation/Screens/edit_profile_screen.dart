@@ -56,122 +56,136 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    return Scaffold(
-      backgroundColor: AppColors.secondary,
-      appBar: AppBar(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
         backgroundColor: AppColors.secondary,
-        title: Text(
-          "Edit Profile",
-          style: TextStyle(
-            color: AppColors.whiteColor,
-            fontWeight: FontWeight.bold,
+        appBar: AppBar(
+          backgroundColor: AppColors.secondary,
+          title: Text(
+            "Edit Profile",
+            style: TextStyle(
+              color: AppColors.whiteColor,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Form(
-          child: Column(
-            children: [
-              Gap(size.height * 0.02),
-              Align(
-                alignment: AlignmentGeometry.topLeft,
-                child: Text(
-                  "Change Your Profile Image",
-                  style: TextStyle(
-                    color: AppColors.tertiary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              Gap(size.height * 0.02),
-              Center(
-                child: GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      builder: (context) => ImageOptionsSheet(
-                        pickedImage: pickedImage,
-                        onDelete: deleteImage,
-                        onPickFromGallery: fetchImageFromGallery,
-                        onPickFromCamera: fetchImageFromCamera,
-                      ),
-                    );
-                  },
-                  child: CircleAvatar(
-                    radius: 80,
-                    backgroundColor: AppColors.primary,
-                    backgroundImage: pickedImage != null
-                        ? FileImage(pickedImage!)
-                        : null,
-                    child: pickedImage == null
-                        ? const Icon(
-                            Icons.person,
-                            size: 70,
-                            color: Colors.white,
-                          )
-                        : null,
-                  ),
-                ),
-              ),
-              Gap(size.height * 0.05),
-              Align(
-                alignment: AlignmentGeometry.topLeft,
-                child: Text(
-                  "Change Your Name",
-                  style: TextStyle(
-                    color: AppColors.tertiary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Gap(size.height * 0.03),
-              TextFormField(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                decoration: InputDecoration(
-                  hintText: "Enter The New Name",
-
-                  fillColor: AppColors.darkBlue,
-                  filled: true,
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                controller: nameController,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return "Please Enter Your Name";
-                  }
-                  if (value.trim().length < 3) {
-                    return "Un Valid Name";
-                  }
-                  return null;
-                },
-              ),
-              Gap(size.height * 0.02),
-              SizedBox(
-                height: size.height * 0.05,
-                width: size.width * 0.5,
-                child: ElevatedButton(
-                  onPressed: () {},
+        body: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                Gap(size.height * 0.02),
+                Align(
+                  alignment: AlignmentGeometry.topLeft,
                   child: Text(
-                    "Change Name",
-                    style: TextStyle(color: AppColors.tertiary),
+                    "Change Your Profile Image",
+                    style: TextStyle(
+                      color: AppColors.tertiary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                Gap(size.height * 0.02),
+                Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (context) => ImageOptionsSheet(
+                          pickedImage: pickedImage,
+                          onDelete: deleteImage,
+                          onPickFromGallery: fetchImageFromGallery,
+                          onPickFromCamera: fetchImageFromCamera,
+                        ),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 80,
+                      backgroundColor: AppColors.primary,
+                      backgroundImage: pickedImage != null
+                          ? FileImage(pickedImage!)
+                          : null,
+                      child: pickedImage == null
+                          ? const Icon(
+                              Icons.person,
+                              size: 70,
+                              color: Colors.white,
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                Gap(size.height * 0.05),
+                Align(
+                  alignment: AlignmentGeometry.topLeft,
+                  child: Text(
+                    "Change Your Name",
+                    style: TextStyle(
+                      color: AppColors.tertiary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Gap(size.height * 0.03),
+                TextFormField(
+                  style: TextStyle(color: AppColors.whiteColor),
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  decoration: InputDecoration(
+                    hintText: "Enter The New Name",
+
+                    fillColor: AppColors.darkBlue,
+                    filled: true,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  controller: nameController,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return "Please Enter Your Name";
+                    }
+                    if (value.trim().length < 3) {
+                      return "Un Valid Name";
+                    }
+                    return null;
+                  },
+                ),
+                Gap(size.height * 0.02),
+                SizedBox(
+                  height: size.height * 0.05,
+                  width: size.width * 0.5,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        await SharedPrefsService.setUserName(
+                          nameController.text.trim(),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Name Saved!")),
+                        );
+                      }
+                    },
+                    child: Text(
+                      "Change Name",
+                      style: TextStyle(color: AppColors.tertiary),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
