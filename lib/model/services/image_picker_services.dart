@@ -18,4 +18,11 @@ class ImagePickerService {
     await SharedPrefsService.saveProfileImage(image.path);
     return File(image.path);
   }
+
+  Future<File?> pickVideoFromCamera() async {
+    final XFile? video = await _picker.pickVideo(source: ImageSource.camera);
+    if (video != null) {
+      return File(video.path);
+    }
+  }
 }

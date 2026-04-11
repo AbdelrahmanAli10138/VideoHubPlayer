@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
+import 'package:video_hub/presentation/Screens/video_view_screen.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -56,7 +59,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
     try {
       print("--- DEBUG: Fetching Album List ---");
 
-      // 1. جلب قائمة الألبومات التي تحتوي على فيديوهات
       List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
         type: RequestType.video,
       );
@@ -69,7 +71,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         // fetch first 50 videos
         final List<AssetEntity> result = await albums[0].getAssetListPaged(
           page: 0,
-          size: 50,
+          size: 100,
         );
 
         print("--- DEBUG: Found ${result.length} videos ---");
@@ -104,36 +106,36 @@ class _LibraryScreenState extends State<LibraryScreen> {
       backgroundColor: AppColors.secondary,
       body: Column(
         children: [
-          Gap(size.height * 0.01),
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: TextFormField(
-              decoration: InputDecoration(
-                hintText: "Search",
-                hintStyle: TextStyle(
-                  color: AppColors.whiteColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                suffixIcon: Icon(Icons.search),
-                fillColor: AppColors.secondary,
-                filled: true,
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (value) {},
-            ),
-          ),
+          // Gap(size.height * 0.01),
+          // Padding(
+          //   padding: const EdgeInsets.all(10.0),
+          //   child: TextFormField(
+          //     decoration: InputDecoration(
+          //       hintText: "Search",
+          //       hintStyle: TextStyle(
+          //         color: AppColors.whiteColor,
+          //         fontWeight: FontWeight.bold,
+          //         fontSize: 16,
+          //       ),
+          //       suffixIcon: Icon(Icons.search),
+          //       fillColor: AppColors.secondary,
+          //       filled: true,
+          //       focusedBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(20),
+          //         borderSide: BorderSide.none,
+          //       ),
+          //       enabledBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(20),
+          //         borderSide: BorderSide.none,
+          //       ),
+          //       errorBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(20),
+          //         borderSide: BorderSide.none,
+          //       ),
+          //     ),
+          //     onChanged: (value) {},
+          //   ),
+          // ),
           Gap(size.height * .01),
           Expanded(
             child: isLoading
@@ -168,7 +170,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         ),
                     itemBuilder: (context, index) {
                       final video = videos[index];
-                      return _buildThumbnail(video);
+                      return InkWell(
+                        onTap: () async {
+                          final File? file = await video.file;
+                          if (file != null && context.mounted) {
+                            // the path of video
+                            String videoPath = file.path;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    VideoViewScreen(videoPath: videoPath),
+                              ),
+                            );
+                          }
+                        },
+                        child: _buildThumbnail(video),
+                      );
                     },
                   ),
           ),

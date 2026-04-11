@@ -2,6 +2,7 @@ import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
+import 'package:video_hub/model/services/image_picker_services.dart';
 import 'package:video_hub/model/services/shared_prefs_services.dart';
 import 'package:video_hub/presentation/Screens/settings_screen.dart';
 import 'package:video_hub/presentation/Screens/library_screen.dart';
@@ -26,14 +27,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // جلب البيانات أول ما التطبيق يفتح
+    // catch data when thee app starting .
     displayProfileImage();
     displayUserName();
 
-    screens = [const HomeContent(), const LibraryScreen(), SettingsScreen()];
+    screens = [
+      HomeContent(onCaptureVideo: captureVideo, onCaptureRecord: () {}),
+      const LibraryScreen(),
+      SettingsScreen(),
+    ];
   }
 
-  // دالة جلب الصورة من الـ Shared Preferences
+  // catch image fro, shared preferences
   Future<void> displayProfileImage() async {
     final String? path = await SharedPrefsService.getProfileImage();
     setState(() {
@@ -45,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // دالة جلب الاسم من الـ Shared Preferences
+  // catch name from shared preferences
   Future<void> displayUserName() async {
     final String? name = await SharedPrefsService.getUserName();
     setState(() {
@@ -57,6 +62,22 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // Future function to record video and display it in library screen
+  Future<void> captureVideo() async {
+    // create a variable to take the function property from shared preferences
+    File? videoFile = await ImagePickerService().pickVideoFromCamera();
+    // if not equal null record the video and go to the library screen to show it
+    if (videoFile != null) {
+      setState(() {
+        currentIndex = 1;
+      });
+      // display the snackBar message to user
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Video Saved To Library")));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,7 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
         elevation: 0,
-        // الزتونة هنا: بنعرض "Welcome Back" وجنبها الاسم لو إحنا في أول صفحة
         title: Text(
           currentIndex == 0
               ? "Welcome Back, $userName"
@@ -72,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         centerTitle: false,
         titleTextStyle: const TextStyle(
-          fontSize: 18, // صغرنا الخط شوية عشان الاسم ياخد مساحة
+          fontSize: 18,
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
@@ -93,7 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
             : null,
       ),
 
-      // استخدام IndexedStack للحفاظ على حالة الصفحات
       body: IndexedStack(index: currentIndex, children: screens),
 
       bottomNavigationBar: BottomNavigationBar(
@@ -103,7 +122,6 @@ class _HomeScreenState extends State<HomeScreen> {
             currentIndex = index;
           });
 
-          // تحديث البيانات (الصورة والاسم) فوراً لما المستخدم يرجع لصفحة الـ Home
           if (index == 0) {
             displayProfileImage();
             displayUserName();
@@ -129,9 +147,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ويدجت محتوى صفحة الهوم
+// Home Content
 class HomeContent extends StatelessWidget {
-  const HomeContent({super.key});
+  const HomeContent({
+    super.key,
+    required this.onCaptureVideo,
+    required this.onCaptureRecord,
+  });
+  final VoidCallback onCaptureVideo;
+  final VoidCallback onCaptureRecord;
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +179,9 @@ class HomeContent extends StatelessWidget {
             padding: const EdgeInsets.all(10.0),
             child: Row(
               children: [
+                // Widget Responsible for start recording video
                 CustomHomeStack(
+                  onTap: onCaptureVideo,
                   backgroundColor: AppColors.tertiary,
                   positionedicon: Icon(
                     Icons.video_camera_back,
@@ -167,6 +193,7 @@ class HomeContent extends StatelessWidget {
                 ),
                 const Spacer(),
                 CustomHomeStack(
+                  onTap: onCaptureRecord,
                   backgroundColor: AppColors.darkBlue,
                   positionedString: "Record Audio",
                   stringColor: AppColors.tertiary,

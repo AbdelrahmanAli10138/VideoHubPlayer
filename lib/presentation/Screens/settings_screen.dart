@@ -117,7 +117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                            fontSize: 18,
                           ),
                         ),
                       ],
@@ -166,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: CustomListTile(
                         leading: Icon(
                           Icons.person,
-                          size: 40,
+                          size: 30,
                           color: AppColors.primary,
                         ),
                         title: "Edit Profile",
@@ -211,7 +211,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: CustomListTile(
                         leading: Icon(
                           Icons.email_outlined,
-                          size: 40,
+                          size: 30,
                           color: AppColors.primary,
                         ),
                         title: "Email",
@@ -234,7 +234,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: CustomListTile(
                         leading: Icon(
                           Icons.message_outlined,
-                          size: 40,
+                          size: 30,
                           color: AppColors.primary,
                         ),
                         title: " WhatsApp",
