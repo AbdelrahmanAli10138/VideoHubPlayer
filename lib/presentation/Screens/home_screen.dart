@@ -1,7 +1,9 @@
 import 'dart:io' show File;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // لا تنسى إضافة bloc
 import 'package:gap/gap.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
+import 'package:video_hub/logic/audio_logic/audio_cubit.dart';
 import 'package:video_hub/model/services/image_picker_services.dart';
 import 'package:video_hub/model/services/shared_prefs_services.dart';
 import 'package:video_hub/presentation/Screens/settings_screen.dart';
@@ -18,7 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
   File? pickedImage;
-  String userName = "User"; // القيمة الافتراضية للاسم
+  String userName = "User";
 
   final List<String> appBarTitles = ["Welcome Back", "Library", "Settings"];
 
@@ -27,127 +29,148 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // catch data when thee app starting .
     displayProfileImage();
     displayUserName();
 
     screens = [
-      HomeContent(onCaptureVideo: captureVideo, onCaptureRecord: () {}),
+      HomeContent(onCaptureVideo: captureVideo, onCaptureRecord: captureAudio),
       const LibraryScreen(),
       SettingsScreen(),
     ];
   }
 
-  // catch image fro, shared preferences
   Future<void> displayProfileImage() async {
     final String? path = await SharedPrefsService.getProfileImage();
     setState(() {
-      if (path != null) {
-        pickedImage = File(path);
-      } else {
-        pickedImage = null; // عشان لو اتمسحت تختفي من الهوم برضه
-      }
+      pickedImage = (path != null) ? File(path) : null;
     });
   }
 
-  // catch name from shared preferences
   Future<void> displayUserName() async {
     final String? name = await SharedPrefsService.getUserName();
     setState(() {
-      if (name != null && name.isNotEmpty) {
-        userName = name;
-      } else {
-        userName = "User";
-      }
+      userName = (name != null && name.isNotEmpty) ? name : "User";
     });
   }
 
-  // Future function to record video and display it in library screen
+  // دالة تسجيل الفيديو
   Future<void> captureVideo() async {
-    // create a variable to take the function property from shared preferences
     File? videoFile = await ImagePickerService().pickVideoFromCamera();
-    // if not equal null record the video and go to the library screen to show it
     if (videoFile != null) {
       setState(() {
         currentIndex = 1;
       });
-      // display the snackBar message to user
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Video Saved To Library")));
+      ).showSnackBar(const SnackBar(content: Text("Video Saved To Library")));
+    }
+  }
+
+  // دالة تسجيل الصوت المرتبطة بالكيوبيت
+  void captureAudio() {
+    final audioCubit = context.read<AudioCubit>();
+    if (audioCubit.state is AudioRecording) {
+      audioCubit.stopRecording();
+    } else {
+      audioCubit.startRecording();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.secondary,
-      appBar: AppBar(
-        backgroundColor: AppColors.secondary,
-        elevation: 0,
-        title: Text(
-          currentIndex == 0
-              ? "Welcome Back, $userName"
-              : appBarTitles[currentIndex],
-        ),
-        centerTitle: false,
-        titleTextStyle: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-        leading: currentIndex == 0
-            ? Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: CircleAvatar(
-                  radius: 100,
-                  backgroundColor: AppColors.primary,
-                  backgroundImage: pickedImage != null
-                      ? FileImage(pickedImage!)
-                      : null,
-                  child: pickedImage == null
-                      ? const Icon(Icons.person, size: 20, color: Colors.white)
-                      : null,
-                ),
-              )
-            : null,
-      ),
-
-      body: IndexedStack(index: currentIndex, children: screens),
-
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: (index) {
+    return BlocListener<AudioCubit, AudioState>(
+      listener: (context, state) {
+        if (state is AudioRecording) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Recording Started..."),
+              backgroundColor: Colors.red,
+              duration: Duration(milliseconds: 500),
+            ),
+          );
+        } else if (state is AudioRecordingSuccess) {
           setState(() {
-            currentIndex = index;
+            currentIndex = 1; // الانتقال للمكتبة بعد النجاح
           });
-
-          if (index == 0) {
-            displayProfileImage();
-            displayUserName();
-          }
-        },
-        type: BottomNavigationBarType.fixed,
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Audio Saved To Library")),
+          );
+        } else if (state is AudioError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+      },
+      child: Scaffold(
         backgroundColor: AppColors.secondary,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.video_library),
-            label: "Library",
+        appBar: AppBar(
+          backgroundColor: AppColors.secondary,
+          elevation: 0,
+          title: Text(
+            currentIndex == 0
+                ? "Welcome Back, $userName"
+                : appBarTitles[currentIndex],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Settings",
+          centerTitle: false,
+          titleTextStyle: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-        ],
+          leading: currentIndex == 0
+              ? Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    radius: 100,
+                    backgroundColor: AppColors.primary,
+                    backgroundImage: pickedImage != null
+                        ? FileImage(pickedImage!)
+                        : null,
+                    child: pickedImage == null
+                        ? const Icon(
+                            Icons.person,
+                            size: 20,
+                            color: Colors.white,
+                          )
+                        : null,
+                  ),
+                )
+              : null,
+        ),
+        body: IndexedStack(index: currentIndex, children: screens),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: currentIndex,
+          onTap: (index) {
+            setState(() {
+              currentIndex = index;
+            });
+            if (index == 0) {
+              displayProfileImage();
+              displayUserName();
+            }
+          },
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: AppColors.secondary,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: Colors.grey,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.video_library),
+              label: "Library",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: "Settings",
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// Home Content
+// محتوى صفحة الهوم تم تعديله ليستخدم BlocBuilder لتحديث شكل زر الريكورد
 class HomeContent extends StatelessWidget {
   const HomeContent({
     super.key,
@@ -159,55 +182,70 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 30),
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: Text(
-              "Start Recording",
-              style: TextStyle(
-                color: AppColors.whiteColor,
-                fontWeight: FontWeight.w700,
-                fontSize: 20,
+    return BlocBuilder<AudioCubit, AudioState>(
+      builder: (context, state) {
+        // التحقق من حالة التسجيل الحالية
+        final bool isRecording = state is AudioRecording;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 30),
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  "Start Recording",
+                  style: TextStyle(
+                    color: AppColors.whiteColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                  ),
+                ),
               ),
-            ),
-          ),
-          const Gap(20),
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Row(
-              children: [
-                // Widget Responsible for start recording video
-                CustomHomeStack(
-                  onTap: onCaptureVideo,
-                  backgroundColor: AppColors.tertiary,
-                  positionedicon: Icon(
-                    Icons.video_camera_back,
-                    size: 38,
-                    color: AppColors.black,
-                  ),
-                  positionedString: "Capture Video",
-                  stringColor: AppColors.black,
+              const Gap(20),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    CustomHomeStack(
+                      onTap: onCaptureVideo,
+                      backgroundColor: AppColors.tertiary,
+                      positionedicon: Icon(
+                        Icons.video_camera_back,
+                        size: 38,
+                        color: AppColors.black,
+                      ),
+                      positionedString: "Capture Video",
+                      stringColor: AppColors.black,
+                    ),
+                    const Spacer(),
+                    CustomHomeStack(
+                      onTap: onCaptureRecord,
+                      // تغيير اللون للأحمر إذا كان التسجيل جارياً
+                      backgroundColor: isRecording
+                          ? Colors.red
+                          : AppColors.darkBlue,
+                      positionedString: isRecording
+                          ? "Stop Now"
+                          : "Record Audio",
+                      stringColor: isRecording
+                          ? Colors.white
+                          : AppColors.tertiary,
+                      positionedicon: Icon(
+                        isRecording
+                            ? Icons.stop_circle
+                            : Icons.mic_none_rounded,
+                        size: 38,
+                        color: isRecording ? Colors.white : AppColors.tertiary,
+                      ),
+                    ),
+                  ],
                 ),
-                const Spacer(),
-                CustomHomeStack(
-                  onTap: onCaptureRecord,
-                  backgroundColor: AppColors.darkBlue,
-                  positionedString: "Record Audio",
-                  stringColor: AppColors.tertiary,
-                  positionedicon: Icon(
-                    Icons.mic_none_rounded,
-                    size: 38,
-                    color: AppColors.tertiary,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

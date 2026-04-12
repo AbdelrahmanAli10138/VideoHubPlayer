@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'
     show SharedPreferences;
+import 'package:video_hub/logic/audio_logic/audio_cubit.dart';
 import 'package:video_hub/logic/videos_logic/video_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'presentation/Screens/home_screen.dart';
@@ -21,12 +22,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => VideoCubit(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<VideoCubit>(create: (context) => VideoCubit()),
+        BlocProvider<AudioCubit>(create: (context) => AudioCubit()),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark(),
-        home: isFirstTime ? SplashScreen() : HomeScreen(),
+        home: isFirstTime ? SplashScreen() : const HomeScreen(),
       ),
     );
   }
