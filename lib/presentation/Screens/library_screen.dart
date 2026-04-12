@@ -41,7 +41,6 @@ class _LibraryScreenState extends State<LibraryScreen>
     });
   }
 
-  // ✅ هذه الدالة تضمن تحديث البيانات في كل مرة يتم عرض الصفحة فيها
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -75,21 +74,17 @@ class _LibraryScreenState extends State<LibraryScreen>
   }
 
   Future<void> loadAllMedia() async {
-    // لا نضع isLoading هنا لتجنب الوميض المتكرر عند التحديث
     try {
-      // 1. جلب الفيديوهات
       List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
         type: RequestType.video,
       );
       if (albums.isNotEmpty) {
-        videos = await albums[0].getAssetListPaged(page: 0, size: 100);
+        final int assetCount = await albums[0].assetCountAsync;
+        videos = await albums[0].getAssetListPaged(page: 0, size: assetCount);
       }
-
-      // 2. جلب الملفات الصوتية من مجلد التطبيق
       final directory = await getApplicationDocumentsDirectory();
       final List<FileSystemEntity> files = directory.listSync();
 
-      // ترتيب الملفات حسب التاريخ (الأحدث أولاً)
       audioFiles =
           files
               .whereType<File>()
@@ -122,13 +117,54 @@ class _LibraryScreenState extends State<LibraryScreen>
           path: path,
           shouldExtractWaveform: false,
         );
-        // تم استخدام forceRefresh لضمان التشغيل في حال كان هناك ملف محمل مسبقاً
         await playerController.startPlayer();
         setState(() => playingIndex = index);
       }
     } catch (e) {
       debugPrint("Error playing audio: $e");
     }
+  }
+
+  void _showDeleteDialog(File file, int index) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.secondary,
+        title: const Text(
+          "Delete Record",
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          "Are you sure you want to delete this recording?",
+          style: TextStyle(color: Colors.grey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel", style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                if (file.existsSync()) {
+                  await file.delete();
+                  setState(() {
+                    audioFiles.removeAt(index);
+                  });
+                }
+                if (mounted) Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Recording deleted")),
+                );
+              } catch (e) {
+                debugPrint("Error deleting file: $e");
+              }
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -138,7 +174,7 @@ class _LibraryScreenState extends State<LibraryScreen>
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
         elevation: 0,
-        toolbarHeight: 0, // أخفينا الـ toolbar لتركيز المساحة للـ Tabs
+        toolbarHeight: 0,
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.primary,
@@ -160,81 +196,129 @@ class _LibraryScreenState extends State<LibraryScreen>
   }
 
   Widget _buildVideoGrid() {
-    if (videos.isEmpty) {
-      return Center(
-        child: Text("No Videos", style: TextStyle(color: AppColors.tertiary)),
-      );
-    }
-    return GridView.builder(
-      padding: const EdgeInsets.all(8),
-      itemCount: videos.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 6,
-        mainAxisSpacing: 6,
-      ),
-      itemBuilder: (context, index) {
-        final video = videos[index];
-        return InkWell(
-          onTap: () async {
-            final File? file = await video.file;
-            if (file != null && context.mounted) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => VideoViewScreen(videoPath: file.path),
+    return RefreshIndicator(
+      onRefresh: loadAllMedia,
+      color: AppColors.primary,
+      child: videos.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(height: MediaQuery.of(context).size.height * 0.35),
+                Center(
+                  child: Text(
+                    "No Videos",
+                    style: TextStyle(color: AppColors.tertiary),
+                  ),
                 ),
-              );
-            }
-          },
-          child: _buildThumbnail(video),
-        );
-      },
+              ],
+            )
+          : GridView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(8),
+              itemCount: videos.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 6,
+                mainAxisSpacing: 6,
+              ),
+              itemBuilder: (context, index) {
+                final video = videos[index];
+                return InkWell(
+                  onTap: () async {
+                    final File? file = await video.file;
+                    if (file != null && context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              VideoViewScreen(videoPath: file.path),
+                        ),
+                      );
+                    }
+                  },
+                  child: _buildThumbnail(video),
+                );
+              },
+            ),
     );
   }
 
   Widget _buildAudioList() {
-    if (audioFiles.isEmpty) {
-      return Center(
-        child: Text("No Audios", style: TextStyle(color: AppColors.tertiary)),
-      );
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.all(10),
-      itemCount: audioFiles.length,
-      itemBuilder: (context, index) {
-        final audio = audioFiles[index];
-        final bool isCurrentPlaying = playingIndex == index;
+    return RefreshIndicator(
+      onRefresh: loadAllMedia,
+      color: AppColors.primary,
+      child: audioFiles.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(height: MediaQuery.of(context).size.height * 0.35),
+                Center(
+                  child: Text(
+                    "No Audios",
+                    style: TextStyle(color: AppColors.tertiary),
+                  ),
+                ),
+              ],
+            )
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(10),
+              itemCount: audioFiles.length,
+              itemBuilder: (context, index) {
+                final audio = audioFiles[index];
+                final bool isCurrentPlaying = playingIndex == index;
 
-        return Card(
-          color: isCurrentPlaying
-              ? AppColors.primary.withOpacity(0.2)
-              : Colors.white10,
-          margin: const EdgeInsets.only(bottom: 10),
-          child: ListTile(
-            leading: Icon(
-              isCurrentPlaying ? Icons.spatial_audio_off : Icons.music_note,
-              color: isCurrentPlaying ? AppColors.primary : Colors.blue,
+                return Card(
+                  color: isCurrentPlaying
+                      ? AppColors.primary.withOpacity(0.2)
+                      : Colors.white10,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: ListTile(
+                    leading: Icon(
+                      isCurrentPlaying
+                          ? Icons.spatial_audio_off
+                          : Icons.music_note,
+                      color: isCurrentPlaying ? AppColors.primary : Colors.blue,
+                    ),
+                    title: Text(
+                      audio.path.split('/').last,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      "Date: ${FileStat.statSync(audio.path).modified.toString().split('.')[0]}",
+                      style: const TextStyle(color: Colors.grey, fontSize: 11),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.redAccent,
+                            size: 22,
+                          ),
+                          onPressed: () => _showDeleteDialog(audio, index),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            isCurrentPlaying
+                                ? Icons.pause_circle_filled
+                                : Icons.play_arrow,
+                            color: isCurrentPlaying
+                                ? Colors.orange
+                                : Colors.green,
+                            size: 30,
+                          ),
+                          onPressed: () => _playAudio(audio.path, index),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-            title: Text(
-              audio.path.split('/').last,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
-              "Date: ${FileStat.statSync(audio.path).modified.toString().split('.')[0]}",
-              style: const TextStyle(color: Colors.grey, fontSize: 11),
-            ),
-            trailing: Icon(
-              isCurrentPlaying ? Icons.pause_circle_filled : Icons.play_arrow,
-              color: isCurrentPlaying ? Colors.orange : Colors.green,
-              size: 30,
-            ),
-            onTap: () => _playAudio(audio.path, index),
-          ),
-        );
-      },
     );
   }
 
