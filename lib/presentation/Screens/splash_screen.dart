@@ -8,7 +8,6 @@ import 'package:video_hub/presentation/Screens/on_boarding1.dart';
 class SplashScreen extends StatelessWidget {
   SplashScreen({super.key});
 
-  // عرفنا الـ controller هنا
   final controller = PageController();
 
   @override

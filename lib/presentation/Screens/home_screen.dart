@@ -1,6 +1,6 @@
 import 'dart:io' show File;
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart'; // لا تنسى إضافة bloc
+import 'package:flutter_bloc/flutter_bloc.dart'; 
 import 'package:gap/gap.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
 import 'package:video_hub/logic/audio_logic/audio_cubit.dart';
@@ -53,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // دالة تسجيل الفيديو
   Future<void> captureVideo() async {
     File? videoFile = await ImagePickerService().pickVideoFromCamera();
     if (videoFile != null) {
@@ -66,7 +65,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // دالة تسجيل الصوت المرتبطة بالكيوبيت
   void captureAudio() {
     final audioCubit = context.read<AudioCubit>();
     if (audioCubit.state is AudioRecording) {
@@ -90,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         } else if (state is AudioRecordingSuccess) {
           setState(() {
-            currentIndex = 1; // الانتقال للمكتبة بعد النجاح
+            currentIndex = 1;
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Audio Saved To Library")),
@@ -170,7 +168,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// محتوى صفحة الهوم تم تعديله ليستخدم BlocBuilder لتحديث شكل زر الريكورد
 class HomeContent extends StatelessWidget {
   const HomeContent({
     super.key,
@@ -184,7 +181,6 @@ class HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AudioCubit, AudioState>(
       builder: (context, state) {
-        // التحقق من حالة التسجيل الحالية
         final bool isRecording = state is AudioRecording;
 
         return SingleChildScrollView(
@@ -221,7 +217,6 @@ class HomeContent extends StatelessWidget {
                     const Spacer(),
                     CustomHomeStack(
                       onTap: onCaptureRecord,
-                      // تغيير اللون للأحمر إذا كان التسجيل جارياً
                       backgroundColor: isRecording
                           ? Colors.red
                           : AppColors.darkBlue,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import المهم جداً للـ Storage
+import 'package:shared_preferences/shared_preferences.dart'; 
 import 'package:video_hub/core/Constant/constant_strings.dart';
 import 'package:video_hub/core/Themes/app_theme.dart';
 import 'package:video_hub/presentation/Screens/home_screen.dart';
@@ -18,7 +18,6 @@ class Onboarding3 extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            /// 🔼 الجزء العلوي (الصور والنصوص)
             Expanded(
               child: Column(
                 children: [
@@ -27,7 +26,6 @@ class Onboarding3 extends StatelessWidget {
                   ),
                   const Gap(25),
 
-                  /// Title مع الـ Gradient
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
                     child: ShaderMask(
@@ -48,7 +46,6 @@ class Onboarding3 extends StatelessWidget {
 
                   const Gap(20),
 
-                  /// Subtitle مع الـ Gradient
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: size.width * 0.1),
                     child: ShaderMask(
@@ -100,7 +97,7 @@ class Onboarding3 extends StatelessWidget {
                         context,
                         MaterialPageRoute(builder: (_) => const HomeScreen()),
                         (route) =>
-                            false, // يمنع الرجوع للـ Onboarding بالـ Back button
+                            false, 
                       );
                     }
                   },
